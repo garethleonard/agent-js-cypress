@@ -1,9 +1,13 @@
 const { reporters } = require('mocha'),
     RPClient = require('reportportal-client'),
-
     { testItemStatuses, logLevels } = require('./src/constants'),
-    { promiseErrorHandler, getStartLaunchObject, getSuiteStartObject,
-        getTestStartObject, getBase64FileObject } = require('./src/reporter-utilities');
+    {
+        promiseErrorHandler,
+        getStartLaunchObject,
+        getSuiteStartObject,
+        getTestStartObject,
+        getBase64FileObject
+    } = require('./src/reporter-utilities');
 
 const { PASSED, FAILED, SKIPPED } = testItemStatuses,
     { ERROR } = logLevels;
@@ -140,11 +144,7 @@ class ReportPortalReporter extends reporters.Base {
             return;
         }
         const testStartObj = getTestStartObject(test.title),
-
-            { tempId, promise } = this.client.startTestItem(testStartObj,
-                this.tempLaunchId,
-                this.currentSuiteId);// this.getParentId(test.cid)
-
+            { tempId, promise } = this.client.startTestItem(testStartObj, this.tempLaunchId, this.currentSuiteId); // this.getParentId(test.cid)
 
         promiseErrorHandler(promise);
         this.testStartRequestsPromises[test.cid] = promise;
@@ -153,7 +153,8 @@ class ReportPortalReporter extends reporters.Base {
     }
 
     testFinishedPass (test, issue) {
-        let finishTestObj = { PASSED, issue };
+        // eslint-disable-next-line object-shorthand
+        let finishTestObj = { PASSED, issue, description: test.body };
 
         this.testFinished(test, finishTestObj);
     }
@@ -171,14 +172,16 @@ class ReportPortalReporter extends reporters.Base {
             finishTestObj = {
                 status: FAILED,
                 issues: issue,
-                description: `${test.file}\n\`\`\`error\n${message}\n\`\`\``
+                description: `${test.body}\n\`\`\`error\n${message}\n\`\`\``
             };
 
-        this.client.sendLog(parentId, {
-            message: message,
-            level: ERROR,
-            time: new Date().valueOf()
-        }, screenShotObj);
+        this.client.sendLog(parentId,
+            {
+                message: message,
+                level: ERROR,
+                time: new Date().valueOf()
+            },
+            screenShotObj);
 
         this.testFinished(test, finishTestObj);
     }
